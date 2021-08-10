@@ -88,7 +88,7 @@ def corAnalysis(symbol: str, correlates: dict, frame: str="1y") -> dict:
             _x = _x.dropna()
             y = y.dropna()
             y = y.set_index("date")
-            #_x, y = _x.align(y, join = "inner", axis = 0)
+            #_x, y = _x.align(y, join = "inner", axis = 0) # maybe come back to this
             _x, y = _align(_x, y)
             rho, p = spearmanr(_x, y)
             info(rho)
