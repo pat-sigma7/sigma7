@@ -4,7 +4,7 @@ from sigma7.utils import dfToDict, authenticate_client, sharpe_ratio, _remove, t
 from sigma7.settings import correlates
 from pyEX.stocks.profiles import peers
 from pyEX.stocks.research import keyStats
-from pyEX.stocks.prices import chart, chartDF
+from pyEX.stocks.prices import chart, chartDF, ohlcDF
 from pyEX import dividendsBasicDF
 from scipy.stats import trim_mean
 from math import ceil 
@@ -16,7 +16,7 @@ from pyEX import news
 from time import ctime, time
 from logging import info
 import pandas as pd
-from numpy import NAN, NaN, prod
+from numpy import NAN, NaN, prod, cumprod
 from sigma7.settings import correlates, econ_ep, econ_keys, econ_correlates
 from requests import get
 from json import loads
@@ -66,6 +66,31 @@ def avgMonthlyReturns(symbol: str, yearsBack:int) -> dict:
     prices = sqldf(query)
     return prices
 
+def dailyReturnsCount(symbol: str, frame: str="2y") -> dict:
+    if (frame not in ["ytd", "max", "1m", "3m", "6m", "1y", "2y", "5y"]):
+        raise Exception('Parameter frame {} not supported. Options are ytd, max, 3m, 6m, 1y, 2y, and 5y'.format(frame))
+    query = '''
+        SELECT \'{}\' AS symbol
+        , avg_gain
+        , count_gain
+        , ABS(avg_gain * count_gain) AS gain_ratio
+        , avg_loss
+        , count_loss
+        , ABS(avg_loss * count_loss) AS loss_ratio
+        , \'{}\' AS timeframe
+        FROM (
+            SELECT 
+                (SELECT AVG(changePercent) FROM prices WHERE changePercent > 0) AS avg_loss,
+                (SELECT AVG(changePercent) FROM prices WHERE changePercent =< 0) AS avg_gain,
+                (SELECT COUNT(changePercent) FROM prices WHERE changePercent > 0) AS count_loss,
+                (SELECT COUNT(changePercent) FROM prices WHERE changePercent =< 0) AS count_gain
+        ) p
+    '''.format(symbol, frame)
+    prices = chartDF(symbol, timeframe = frame, sort = "asc")
+    outDF = sqldf(query)
+    out = dfToDict(outDF)
+    return(out)
+
 def corAnalysis(symbol: str, correlates: dict, frame: str="1y") -> dict:
     if (frame not in ["ytd", "1y", "2y", "5y"]):
         raise Exception('Parameter frame {} not supported. Options are ytd, 1y, 2y, and 5y'.format(frame))
@@ -87,9 +112,9 @@ def corAnalysis(symbol: str, correlates: dict, frame: str="1y") -> dict:
                 y = pd.DataFrame(y)[["date", "changePercent"]]
             _x = _x.dropna()
             y = y.dropna()
-            y = y.set_index("date")
-            #_x, y = _x.align(y, join = "inner", axis = 0) # maybe come back to this
-            _x, y = _align(_x, y)
+            y["date"] = pd.to_datetime(y["date"])
+            y = y.set_index("date")       
+            _x, y = _x.align(y, join = "inner", axis = 0)
             rho, p = spearmanr(_x, y)
             info(rho)
             if p < .05 and (rho > .55 or rho < 0):
@@ -227,12 +252,16 @@ def compare_performance(symbol: str, frame:str="ytd") -> dict:
         out["returns"] = ["No peers to compare"]
         return out
     returns = {}
+    __peers = list()
     for peer in _peers:
         pout = full_returns(peer, frame)
         returns[peer] = pout["percent_return"]
+        __peers.append(pout["percent_return"])     
     returns[symbol] = sout["percent_return"]
     returns = dict(sorted(returns.items(), key=lambda x: x[1], reverse=True)) 
     out["returns"] = returns
+    out["average"] = sout["percent_return"]
+    out["peerAvg"] = mean(__peers)
     return out
 
 def econ_series(_key: str, range: str = "1y", format: str="dict"):
