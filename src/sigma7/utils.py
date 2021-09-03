@@ -4,10 +4,17 @@ from numpy import int64, int32, float64, bool_
 from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 from os import environ
+from sigma7.settings import comp_fields
 from pandas.core.algorithms import isin
 from pyEX import chartDF
 from numpy import sqrt, log1p
 from math import log
+from logging import info
+import functools
+
+def log(_info: str):
+    print(_info)
+    info(_info)
 
 def convert(o):
     if isinstance(o, int64): return int(o)  
@@ -37,7 +44,7 @@ def flatten_df(df: pd.DataFrame, symbol: str, index: str) -> dict:
         out.update({item.lower(): df[item][0]})
     for item in nons:
         out.update({item.lower(): dict(zip(indx, df[item]))})
-    return(out)
+    return out
 
 def format_small(df: pd.DataFrame, symbol: str, col: str) -> dict:
     if type(symbol) != str or type(col) != str:
@@ -127,4 +134,20 @@ def _align(df1: dict, df2: dict) -> tuple:
     if align:
         out = df1.align(df2, join = "inner", axis = 0)
     return out
-    
+
+def format_comp(_dict: dict) -> dict:
+    out = dict()
+    comp = dict()
+    for item in _dict.items():
+        key, _var = item
+        if key in comp_fields:
+            if _var != 0: comp[key] = _var
+        else:
+            out[key] = _var
+    out["comp"] = comp
+    return out
+
+def sort_dict(_dict: dict, section: None) -> dict:
+    out = dict(sorted(_dict.items(), key=lambda x: x[1], reverse=True))
+    return out 
+
