@@ -1,6 +1,8 @@
 from os import environ
 from numpy.core.fromnumeric import cumsum
 from sigma7.utils import dfToDict, authenticate_client, sharpe_ratio, _remove, top_botN, econ_df, _align
+from sigma7.dec_cache import cache
+from sigma7.decor import benchmark
 from sigma7.settings import correlates
 from pyEX.stocks.profiles import peers
 from pyEX.stocks.research import keyStats
@@ -221,6 +223,7 @@ def dividend_yield(symbol: str, frame: str="5y", full: bool=False) -> dict:
         out["raw"] = _out
     return out
 
+@cache(platform = "iex")
 def full_returns(symbol: str, frame: str="ytd") -> dict:
     divs = dividendsBasicDF(symbol = symbol, timeframe= frame)
     prices = chartDF(symbol, timeframe = frame, sort="asc")[["close"]]

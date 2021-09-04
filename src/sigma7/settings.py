@@ -50,5 +50,5 @@ econ_keys = {
 econ_ep = "https://cloud.iexapis.com/stable/time-series/economic/{}?token={}&range={}"
 
 cache_limit = 1048576 * 300 # modify second number for mb limit 
-cache_time_limit = 1
+cache_time_limit = 86400 * (1.5)
 

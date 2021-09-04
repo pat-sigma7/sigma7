@@ -11,10 +11,21 @@ from numpy import sqrt, log1p
 from math import log
 from logging import info
 import functools
+from inspect import getargvalues
 
 def log(_info: str):
     print(_info)
     info(_info)
+
+def pull_key(args: dict) -> dict:
+    if "symbol" in args.keys():
+        return args["symbol"]
+    elif "key" in args.keys():
+        return args["key"]
+    elif "_key" in args.keys():
+        return args["_key"]
+    else:
+        return False
 
 def convert(o):
     if isinstance(o, int64): return int(o)  

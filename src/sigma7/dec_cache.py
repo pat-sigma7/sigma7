@@ -6,7 +6,7 @@ This module contains the code for the sigma7 cache.
 
 from sigma7.settings import cache_limit, cache_time_limit
 from sigma7 import CACHE
-from sigma7.utils import log
+from sigma7.utils import log, pull_key
 import functools
 from copy import deepcopy
 from sys import getsizeof
@@ -115,7 +115,7 @@ def clean_cache(verbose = False) -> bool:
                 if verbose: log(f"Cleaning {platform} - {symbol}")
     return True
 
-def cache(func) -> dict:
+def cache(platform, _key = None) -> dict:
     """Decorator cache function 
 
     This function checks the cache available data on a given
@@ -128,12 +128,25 @@ def cache(func) -> dict:
                         This function should have params - platform, key, and func
     
     Returns:
-        dict: A cached output or newly generated
+        dict: A cached output or newly generated output
     """
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        _cache = check_cache(**kwargs)
-        if _cache: return _cache
+    def dec_wrapper(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            _func = func.__name__
+            key = pull_key(kwargs)
+            if _key: key = _key
+            if key:
+                _cache = check_cache(platform, key, _func)
+                if _cache: return _cache
+            out = func(*args, **kwargs)
+            if check_cache_size() and key:
+                append_cache(platform, key, _func, out)
+            else: log("Cannot log entry")
+            return out
+        return wrapper
+    return dec_wrapper
+
         
 
 

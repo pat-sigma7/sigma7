@@ -4,31 +4,26 @@ decor - module to store most decorator functions for sigma7
 
 import pandas as pd
 import functools
-from sigma7.wrapper import func_routes
+from sigma7.utils import log
+from time import time
 
-def route_func(func) -> dict:
-    """Routes a dictionary to the correct iex or sigma7 function.
+def benchmark(func) -> str:
+    """Tracks how long a function takes to complete, start to finish.
 
-    This function should be used on an endpoint to route a endpoint
-    to the right iex or sigma7 function.
+    Args:
+        func (function): Wraps over a function
 
-    Args: 
-        func (function): Wraps over a function that SHOULD return a dictionary with the following structure:
-            {"platform": ["iex", "sigma7"], "func": "supported_function", "params": {"symbol": "TICKER", etc}}
-    
     Returns:
-        dict: Dictionary output from a routed function
-    
+        str: String containing how long the function took to run
     """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        raw = func(*args, **kwargs)
-        platform, _func, params = raw["platform"], raw["func"], raw["params"]
-        route = func_routes[platform][_func]
-        _func = route["func"]
-        params.update(route["params"])
-        out = _func(**params)
-        return out
+        start = time()
+        func(*args, **kwargs)
+        end = time()
+        diff = end - start
+        log(diff)
+        return diff
     return wrapper
 
 def dec_test(func) -> dict:
@@ -43,3 +38,5 @@ def dec_test(func) -> dict:
             out["test"] = "hi"
         return out
     return wrapper
+
+

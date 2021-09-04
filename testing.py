@@ -1,29 +1,33 @@
 #from sigma7.base import _prices
-from sigma7.decor import route_func
+from numpy.core.numeric import full
 from sigma7.dec_cache import append_cache, clean_cache, purge_cache
+from sigma7.iex_funcs import compare_performance, full_returns
+from sigma7.utils import pull_key
 from sigma7 import CACHE
 from pyEX import Client
 import os
 from sys import getsizeof
 from time import time, sleep
+from inspect import getargvalues
 
 os.environ["IEX_TOKEN"] = "pk_6fdc6387a2ae4f8e9783b029fc2a3774"
 Client()
 symbol = "MSFT"
 frame = "1y"
+def test_func2(**kwargs):
+    return kwargs
 
-@route_func
-def test_func():
-    return {
-        "platform": "iex",
-        "func": "ceo_pay",
-        "params": {
-            "symbol": "MSFT"
-        }
-    }
+def test3():
+    return "hi"
 
-def test_func2(first: str, last: str):
-    return f"hi {first} {last}"
+symbols = ["TSLA", "AAPL", "MSFT", "MMM", "MCD", "F", "GOOG"]
+test = full_returns("MSFT")
+    print(CACHE)
+#print(test_func2.__code__.co_varnames)
+#test = list(test_func2.__code__.co_varnames)
+#t = test.index("first")
+#print(t)
+
 
 '''
 plt = "iex"
@@ -37,7 +41,3 @@ purge_cache(False)
 clean_cache(True)
 print(CACHE)
 '''
-
-test = {}
-if not test["one"]:
-    print("hi")
