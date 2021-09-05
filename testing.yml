@@ -1,0 +1,58 @@
+name: Test python and push to docker
+
+on:
+  push:
+    branches:
+      - [ main ]
+
+jobs:
+  # Run code tests before building the image, to ensure it is good to go
+  build:
+    name: Run code tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setting up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f req1.txt ]; then pip3 install -r req1.txt; fi
+
+        pip install pylint
+
+    - name: Analysing the code with pylint
+      run: |
+        pylint --fail-under=10 `find -regextype egrep -regex '(.*.py)$'`
+    
+    - name: Test with pytest
+      run: |
+        pip3 install pytest
+        pytest tests/test.py
+
+# Build and push the Docker image
+  push_to_registry:
+    name: Build and push Docker image to Docker Hub
+    # ...but only when a `release` is `published` (combined with `on`)
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      
+      - name: Build and push image to the Docker Hub
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: ${{ secrets.DOCKERHUB_REPOSITORY }}
+          tag_with_ref: true
+          tag_with_sha: true
+          tags: latest
