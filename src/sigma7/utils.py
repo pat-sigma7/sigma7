@@ -5,13 +5,9 @@ from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 from os import environ
 from sigma7.settings import comp_fields
-from pandas.core.algorithms import isin
 from pyEX import chartDF
 from numpy import sqrt, log1p
-from math import log
 from logging import info
-import functools
-from inspect import getargvalues
 
 def log(_info: str):
     print(_info)

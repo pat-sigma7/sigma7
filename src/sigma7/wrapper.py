@@ -51,7 +51,6 @@ def route_func(func) -> dict:
     
     Returns:
         dict: Dictionary output from a routed function
-    
     """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):

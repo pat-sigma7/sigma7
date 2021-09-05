@@ -41,7 +41,7 @@ def check_cache(platform: str, key: str, func: str):
     return False
              
         
-def append_cache(platform: str, key: str, func: str, _dict: dict):
+def append_cache(platform: str, key: str, func: str, _dict: dict) -> bool:
     """Appends an object to the sigma7 cache 
 
     Args:

@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+__pycache__
 *.py[cod]
 *$py.class
 
@@ -126,8 +127,10 @@ venv.bak/
 dmypy.json
 
 # Pyre type checker
-<<<<<<< HEAD
 .pyre/
-=======
-.pyre/
->>>>>>> c9ed2ac2385519c3a48058fc6e3165c99d7ae04e
+
+# Misc
+testing.py
+
+#IDE/Text Editor Files
+.vscode

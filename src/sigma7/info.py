@@ -1,3 +1,9 @@
+""" Info module containing strings. 
+
+Just to keep things organized. These strings
+will be referenced in other scripts.
+"""
+
 info = '''How-to: \n
 \tURL: api/compare_metric/?symbol=[TICKER]&metric=[METRIC] \n
 \n

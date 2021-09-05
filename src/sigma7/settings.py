@@ -1,3 +1,5 @@
+""" Settings module to configure the sigma7 library
+"""
 
 correlates = {
         "S&P 500": "SPY", "Gold": "GLD", 
