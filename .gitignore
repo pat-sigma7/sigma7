@@ -129,8 +129,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Misc
-testing.py
-
 #IDE/Text Editor Files
 .vscode
+
+# Misc
+testing.py
