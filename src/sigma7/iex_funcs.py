@@ -354,7 +354,18 @@ def gather_correlates(_range: str="1y") -> dict:
     out["econ"] = econ
     return out
 
+@cache(platform = "iex")
 def compare_ceo_comp(symbol: str) -> dict:
+    """Compares CEO Compensation of a given stock with its peers.
+
+    This function compares CEO Compensation amongst a stocks peers, and also
+    computes the average or baseline compensation among its peers and returns that.
+
+    Args:
+        symbol (str): Supported IEX symbol/ticker
+    Returns:
+        dict: Dictionary containing ceo compensation data
+    """
     _peers = peers(symbol)
     _symbol = ceoCompensation(symbol)
     out = format_comp(_symbol)
@@ -375,7 +386,15 @@ def compare_ceo_comp(symbol: str) -> dict:
     out["peers"] = peer_comp
     return out
 
+@cache(platform = "iex")
 def insider_transactions(symbol: str) -> dict:
+    """Formats, orders, and computes insider transactions for a given symbol.
+
+    Args:
+        symbol (str): Supported IEX symbol
+    Returns:
+        dict: Dictionary containing insider transaction data
+    """
     raw = insiderTransactions(symbol)
     out = {
         "symbol": symbol,
