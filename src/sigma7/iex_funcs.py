@@ -6,14 +6,14 @@ iex functions.
 
 from os import environ
 from numpy.core.fromnumeric import cumsum
-from sigma7.utils import dfToDict, authenticate_client, sharpe_ratio, _remove, top_botN, econ_df, _align
+from sigma7.utils import authenticate_client, format_comp, sharpe_ratio, _remove, top_botN, econ_df, format_comp, gather_insiders, sort_dict
 from sigma7.dec_cache import cache
 from sigma7.decor import benchmark
 from sigma7.settings import correlates
 from pyEX.stocks.profiles import peers
 from pyEX.stocks.research import keyStats
 from pyEX.stocks.prices import chart, chartDF, ohlcDF
-from pyEX import dividendsBasicDF
+from pyEX import dividendsBasicDF, insiderTransactions, ceoCompensation, PyEXception
 from scipy.stats import trim_mean
 from math import ceil 
 from statistics import mean
@@ -354,5 +354,47 @@ def gather_correlates(_range: str="1y") -> dict:
     out["econ"] = econ
     return out
 
+def compare_ceo_comp(symbol: str) -> dict:
+    _peers = peers(symbol)
+    _symbol = ceoCompensation(symbol)
+    out = format_comp(_symbol)
+    out["comp"] = sort_dict(out["comp"])
+    peer_comp = dict()
+    peer_avg = list()
+    for _peer in _peers:
+        try:
+            raw = ceoCompensation(_peer)
+        except PyEXception:
+            continue
+        peer_comp[_peer] = raw["total"]
+        peer_avg.append(raw["total"])
+    peer_avg.append(_symbol["total"])
+    peer_comp[symbol] = _symbol["total"]
+    out["peerAvg"] = round(mean(peer_avg),2)
+    peer_comp = sort_dict(peer_comp)
+    out["peers"] = peer_comp
+    return out
 
-    
+def insider_transactions(symbol: str) -> dict:
+    raw = insiderTransactions(symbol)
+    out = {
+        "symbol": symbol,
+        "transactions": {}
+    }
+    _raw = gather_insiders(raw)
+    for trx in raw:
+        if trx["filingDate"] not in out["transactions"].keys():
+            out["transactions"][trx["filingDate"]] = {}
+        shares = trx["tranShares"]
+        #_key = "{} - {}".format(trx["fullName"], trx["reportedTitle"])
+        _key = trx["fullName"].title()
+        _out = _raw.copy()
+        _out["date"] = trx["filingDate"]
+        _out[_key] = shares
+        out["transactions"][trx["filingDate"]].update(_out)
+    transactions = {}
+    ok = sorted(out["transactions"].keys())
+    for _key in ok:
+        transactions[_key] = out["transactions"][_key]
+    out["transactions"] = list(transactions.values())
+    return out

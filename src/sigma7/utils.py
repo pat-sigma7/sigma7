@@ -154,7 +154,18 @@ def format_comp(_dict: dict) -> dict:
     out["comp"] = comp
     return out
 
-def sort_dict(_dict: dict, section: None) -> dict:
+def sort_dict(_dict: dict) -> dict:
     out = dict(sorted(_dict.items(), key=lambda x: x[1], reverse=True))
     return out 
+
+def gather_insiders(insiders: list) -> dict:
+    out = {}
+    for insider in insiders:
+        _name, title = insider["fullName"], insider["reportedTitle"]
+        if not title:
+            title = "Employee"
+        #_key = "{} - {}".format(_name, title)
+        _key = _name.title()
+        out[_key] = 0
+    return out
 
