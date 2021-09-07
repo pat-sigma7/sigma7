@@ -78,5 +78,35 @@ Parameters: \n
 Description: \n
 \tCalculates total return for a particular stock and timeframe. \n
 \tThis DOES account for dividends.
+'''
 
+ceo_pay_info = '''Insider: \n
+\tURL: api/ceo_pay/?symbol=[TICKER] \n
+\n
+Parameters: \n
+\tsymbol: Supported ticker from sigma7. All caps [REQUIRED] \n
+\n
+Description: \n
+\tReturns the CEO Pay of a given stock, alongside its peer average and the CEO Pay of its peers.
+'''
+
+insider_info = '''Insider: \n
+\tURL: api/insider/?symbol=[TICKER] \n
+\n
+Parameters: \n
+\tsymbol: Supported ticker from sigma7. All caps [REQUIRED] \n
+\n
+Description: \n
+\tReturns transactions from company insiders.
+
+'''
+wrapper_info = ''' Wrapper Endpoint
+\tURL: api/platform/func?param1=MSFT&param2=1y
+
+Parameters: \n
+\tplatform: Tell wrapper whether you want to wrap over an IEX function or sigma7 function. ["iex", "sigma7"]
+\tfunc: What function to wrap over - see IEX/sigma7 docs for function names - THIS IS CASE SENSITIVE
+\tparams: Unlike other endpoints, this one takes as many or as little parameters as necessary.\n
+\t\t The name of the parameter should correspond with the parameters of the function you select. \n
+\t\t Everything in this endpoint is case sensitive, make sure everything matches the docs.
 '''

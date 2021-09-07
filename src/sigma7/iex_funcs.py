@@ -168,15 +168,15 @@ def calcSharpe(symbol: str, frame: int=2, rf: float=.0) -> dict:
     """
     peersOf = list(peers(symbol))
     peersOf = _remove("SPY", peersOf)
-    sharpe = sharpe_ratio(symbol, frame, rf)
+    sharpe = sharpe_ratio(symbol = symbol, frame = frame, rf = rf)
     _peers = {}
-    spy = sharpe_ratio("SPY", frame, rf)
+    spy = sharpe_ratio(symbol = "SPY", frame = frame, rf = rf)
     out = {
         symbol: sharpe,
         "S&P 500": spy
     }
     for peer in peersOf:
-        _sharpe = sharpe_ratio(peer, frame, rf)
+        _sharpe = sharpe_ratio(symbol = peer, frame = frame, rf = rf)
         _peers[peer] = _sharpe
     out["peers"] = _peers
     return out
@@ -417,3 +417,25 @@ def insider_transactions(symbol: str) -> dict:
         transactions[_key] = out["transactions"][_key]
     out["transactions"] = list(transactions.values())
     return out
+
+
+def top_insiders(symbol: str, topN: int = 10) -> dict:
+    """Returns the top insiders by volume
+
+    Args:
+        symbol (str): Supported IEX symbol
+        topN (int): Top N insiders to return, defaults to 10.
+    Returns:
+        dict: Top N insiders ordered least to greatest by volume
+    """
+    raw = insiderTransactions(symbol)
+    insider = {"sale": 0, "buy": 0, "abs_total": 0}
+    insiders = {}
+    for trans in raw:
+        pass
+
+
+def insider_pie(symbol: str) -> dict:
+    """Returns the insider transactions as a fraction
+    """
+    pass

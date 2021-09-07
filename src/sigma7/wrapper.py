@@ -1,5 +1,5 @@
 from pyEX import analystRecommendations, balanceSheet, cashFlow, ceoCompensation, incomeStatement, dividendsBasic, chart, news
-from sigma7.iex_funcs import analyzeNews
+from logging import warning
 import functools
 
 func_routes = {
@@ -39,6 +39,11 @@ func_routes = {
     }
 }
 
+def check_route(platform: str,_func: str) -> dict:
+    if platform in list(func_routes.keys()):
+        return _func in list(func_routes[platform].keys())
+    return False
+
 def route_func(func) -> dict:
     """Routes a dictionary to the correct iex or sigma7 function.
 
@@ -56,9 +61,27 @@ def route_func(func) -> dict:
     def wrapper(*args, **kwargs):
         raw = func(*args, **kwargs)
         platform, _func, params = raw["platform"], raw["func"], raw["params"]
-        route = func_routes[platform][_func]
+        if check_route(platform, _func): 
+            route = func_routes[platform][_func]
+        else: 
+            warning(f"Platform {platform} and or function {_func} not found in allowed routes..")
+            return False
         _func = route["func"]
         params.update(route["params"])
         out = _func(**params)
         return out
     return wrapper
+
+@route_func
+def wrap(platform: str, _func: str, params: dict) -> dict:
+    """Simple wrapper function to be used with the decorator above.
+
+    See docs from decorator above..
+    I know this isn't the best way to do it, but I'm too lazy to fix it right now. 
+    Coming back to this later..
+    """
+    return {
+        "platform": platform,
+        "func": _func,
+        "params": params
+    }
