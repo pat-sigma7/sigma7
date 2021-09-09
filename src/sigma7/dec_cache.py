@@ -6,12 +6,11 @@ This module contains the code for the sigma7 cache.
 
 from sigma7.settings import cache_limit, cache_time_limit
 from sigma7 import CACHE
-from sigma7.utils import log, pull_key
+from sigma7.utils import log, pull_key, stringify_args
 import functools
 from copy import deepcopy
 from sys import getsizeof
 from time import time
-
 
 def check_cache_size() -> bool:
     """Ensures that the cache size less than the designated limit.
@@ -55,9 +54,12 @@ def append_cache(platform: str, key: str, func: str, _dict: dict) -> bool:
 
     """
     _dict["cache_ts"] = time()
-    CACHE[platform][key] = {
-        func: _dict
-    }
+    if key in CACHE[platform].keys():    
+        CACHE[platform][key].update({func: _dict})
+    else:
+        CACHE[platform][key] = {
+            func: _dict
+        }
     return True
 
 def pop_cache(platform: str, key: str, func: str) -> bool:
@@ -133,7 +135,8 @@ def cache(platform, _key = None) -> dict:
     def dec_wrapper(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            _func = func.__name__
+            params = stringify_args(kwargs)
+            _func = "{}_{}".format(func.__name__, params)
             key = pull_key(kwargs)
             if _key: key = _key
             if key:
@@ -142,7 +145,7 @@ def cache(platform, _key = None) -> dict:
             out = func(*args, **kwargs)
             if check_cache_size() and key:
                 append_cache(platform, key, _func, out)
-            else: log("Cannot log entry")
+            else: log("Cannot cache {}".format(func.__name__))
             return out
         return wrapper
     return dec_wrapper

@@ -6,7 +6,7 @@ iex functions.
 
 from os import environ
 from numpy.core.fromnumeric import cumsum
-from sigma7.utils import authenticate_client, format_comp, sharpe_ratio, _remove, top_botN, econ_df, format_comp, gather_insiders, sort_dict
+from sigma7.utils import authenticate_client, format_comp, sharpe_ratio, _remove, top_botN, econ_df, format_comp, gather_insiders, sort_dict, within_date_range
 from sigma7.dec_cache import cache
 from sigma7.decor import benchmark
 from sigma7.settings import correlates
@@ -168,15 +168,15 @@ def calcSharpe(symbol: str, frame: int=2, rf: float=.0) -> dict:
     """
     peersOf = list(peers(symbol))
     peersOf = _remove("SPY", peersOf)
-    sharpe = sharpe_ratio(symbol = symbol, frame = frame, rf = rf)
+    sharpe = sharpe_ratio(symbol, frame, rf)
     _peers = {}
-    spy = sharpe_ratio(symbol = "SPY", frame = frame, rf = rf)
+    spy = sharpe_ratio("SPY", frame, rf)
     out = {
         symbol: sharpe,
         "S&P 500": spy
     }
     for peer in peersOf:
-        _sharpe = sharpe_ratio(symbol = peer, frame = frame, rf = rf)
+        _sharpe = sharpe_ratio(peer, frame, rf)
         _peers[peer] = _sharpe
     out["peers"] = _peers
     return out
@@ -287,7 +287,7 @@ def compare_performance(symbol: str, frame:str="ytd") -> dict:
         dict: Dictionary containing performance data of a symbol and its peers 
     """
     _peers = peers(symbol)
-    sout = full_returns(symbol, frame)
+    sout = full_returns(symbol, frame) 
     out = {
         "symbol": symbol,
         "frame": frame
@@ -298,7 +298,7 @@ def compare_performance(symbol: str, frame:str="ytd") -> dict:
     returns = {}
     __peers = list()
     for peer in _peers:
-        pout = full_returns(symbol = peer, frame = frame)
+        pout = full_returns(peer, frame)
         returns[peer] = pout["percent_return"]
         __peers.append(pout["percent_return"])     
     returns[symbol] = sout["percent_return"]
@@ -418,8 +418,8 @@ def insider_transactions(symbol: str) -> dict:
     out["transactions"] = list(transactions.values())
     return out
 
-
-def top_insiders(symbol: str, topN: int = 10) -> dict:
+@cache(platform = "iex")
+def top_insiders(symbol: str) -> dict:
     """Returns the top insiders by volume
 
     Args:
@@ -432,10 +432,106 @@ def top_insiders(symbol: str, topN: int = 10) -> dict:
     insider = {"sale": 0, "buy": 0, "abs_total": 0}
     insiders = {}
     for trans in raw:
-        pass
+        name = trans["fullName"]
+        title = trans["reportedTitle"]
+        shares = trans["tranShares"]
+        if title:
+            name = f"{name} - {title}"
+        if name in insiders.keys():
+            _insider = insiders[name]
+        else:
+            _insider = insider.copy()
+        if shares > 0:
+            _insider["buy"] = _insider["buy"] + shares
+        else:
+            _insider["sale"] = _insider["sale"] - shares
+        _insider["abs_total"] = _insider["abs_total"] + abs(shares)
+        insiders[name] = _insider
+        insiders = dict(sorted(insiders.items(), key=lambda x: x[1]["abs_total"], reverse=True))
+    return insiders
 
+@cache(platform = "iex")
+def insider_trades(symbol: str) -> dict:
+    """Formats, orders, and computes insider transactions for a given symbol.
 
-def insider_pie(symbol: str) -> dict:
-    """Returns the insider transactions as a fraction
+    Args:
+        symbol (str): Supported IEX symbol
+    Returns:
+        dict: Dictionary containing insider transaction data
     """
-    pass
+    raw = insiderTransactions(symbol)
+    out = {
+        "symbol": symbol,
+        "transactions": {}
+    }
+    for trx in raw:
+        if trx["filingDate"] not in out["transactions"].keys():
+            out["transactions"][trx["filingDate"]] = {"date": False, "bought": 0, "sold": 0}
+        _date = trx["filingDate"]
+        _out = out["transactions"][_date].copy()
+        if not _out["date"]: _out["date"] = _date
+        shares = trx["tranShares"]
+        if shares > 0:
+            _out["bought"] += shares
+        else:
+            _out["sold"] -= shares
+        out["transactions"][_date] = _out 
+    out["transactions"] = list(out["transactions"].values())
+    return out
+
+@cache(platform = "iex")
+def top_insiders(symbol: str) -> dict:
+    """Returns the top insiders by volume
+
+    Args:
+        symbol (str): Supported IEX symbol
+        topN (int): Top N insiders to return, defaults to 10.
+    Returns:
+        dict: Top N insiders ordered least to greatest by volume
+    """
+    raw = insiderTransactions(symbol)
+    insider = {"sale": 0, "buy": 0, "total_volume": 0}
+    insiders = {}
+    for trans in raw:
+        name = trans["fullName"].title()
+        title = trans["reportedTitle"]
+        shares = trans["tranShares"]
+        if title:
+            name = f"{name} - {title}"
+        if name in insiders.keys():
+            _insider = insiders[name]
+        else:
+            _insider = insider.copy()
+        if shares > 0:
+            _insider["buy"] = _insider["buy"] + shares
+        else:
+            _insider["sale"] = _insider["sale"] - shares
+        _insider["total_volume"] = _insider["total_volume"] + abs(shares)
+        insiders[name] = _insider
+        insiders = dict(sorted(insiders.items(), key=lambda x: x[1]["total_volume"], reverse=True))
+    return insiders
+
+@cache(platform = "iex")
+def insider_pie(symbol: str, n: int=3) -> dict:
+    """Returns the insider transactions as a fraction
+
+    Args:
+        symbol (str): Supported IEX ticker
+        n (int): Number of months to look back
+    Returns:
+        dict: Insider transaction proportions
+    """
+    if n not in [3, 6, 12]: 
+        raise Exception("Param n not [3, 6, 12]")
+    raw = insiderTransactions(symbol)
+    out = {"bought": 0, "sold": 0}
+    for trx in raw:
+        _date = trx["filingDate"]
+        if not within_date_range(_date, n): continue
+        shares = trx["tranShares"]
+        if shares > 0:
+            out["bought"] += shares
+        else:
+            out["sold"] -= shares
+    return out
+    

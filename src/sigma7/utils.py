@@ -1,9 +1,11 @@
 from datetime import datetime  
 import pandas as pd
+from pandas import Timestamp
 from numpy import int64, int32, float64, bool_
 from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 from os import environ
+from datetime import date, timedelta
 from sigma7.settings import comp_fields
 from pyEX import chartDF
 from numpy import sqrt, log1p
@@ -169,3 +171,28 @@ def gather_insiders(insiders: list) -> dict:
         out[_key] = 0
     return out
 
+def recent_price(_date: str, prices: pd.DataFrame) -> str:
+    price = prices[_date]
+    i = 1
+    while not isinstance(price, float):
+        _year, _mo,_d = _date.split("-")
+        start = date(int(_year), int(_mo), int(_d))
+        __date = str(start - timedelta(i))
+        price = prices.loc[__date].squeeze()
+        i -= 1
+    return price
+
+def within_date_range(_date: str, lastN: int) -> bool:
+    n = lastN * 30
+    _year, _mo, d = _date.split("-")
+    start = date.today() - timedelta(n)
+    __date = date(int(_year), int(_mo), int(d))
+    return __date >= start 
+
+def stringify_args(params: dict) -> str:
+    out = list()
+    for param in params.items():
+        _key, val = param
+        if type(val) not in [dict, list]:
+            out.append(str(val))
+    return "_".join(out)
