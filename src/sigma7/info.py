@@ -91,7 +91,7 @@ Description: \n
 '''
 
 insider_info = '''Insider: \n
-\tURL: api/insider/?symbol=[TICKER] \n
+\tURL: api/insider?symbol=[TICKER] \n
 \n
 Parameters: \n
 \tsymbol: Supported ticker from sigma7. All caps [REQUIRED] \n
@@ -109,4 +109,15 @@ Parameters: \n
 \tparams: Unlike other endpoints, this one takes as many or as little parameters as necessary.\n
 \t\t The name of the parameter should correspond with the parameters of the function you select. \n
 \t\t Everything in this endpoint is case sensitive, make sure everything matches the docs.
+'''
+
+insiders_pie_info = ''' Insiders Pie: \n
+\tURL: api/insiders_pie?symbol=[TICKER]
+\n
+Parameters: \n
+\tsymbol: Supported ticker from sigma7. All caps [REQUIRED] \n
+\tperiod: Period to pull insider data from - [3, 6, 12]
+\n
+Description: \n
+\tReturns ratio of buys/sells from insiders over a given period
 '''
