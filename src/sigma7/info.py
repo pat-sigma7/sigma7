@@ -97,7 +97,7 @@ Parameters: \n
 \tsymbol: Supported ticker from sigma7. All caps [REQUIRED] \n
 \n
 Description: \n
-\tReturns transactions from company insiders.
+\tReturns transactions time series from company insiders.
 
 '''
 wrapper_info = ''' Wrapper Endpoint
@@ -120,4 +120,17 @@ Parameters: \n
 \n
 Description: \n
 \tReturns ratio of buys/sells from insiders over a given period
+'''
+
+top_insiders_info = ''' Top Insiders: \n
+\tURL: api/top_insiders?symbol=[TICKER]
+\n
+Parameters: \n
+\tsymbol: Supported ticker from sigma7. All caps [REQUIRED] \n
+\n
+Description: \n
+\tReturns the top insiders ordered by volume.
+'''
+
+political_trades_info = ''' Placeholder
 '''

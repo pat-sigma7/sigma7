@@ -485,7 +485,6 @@ def top_insiders(symbol: str) -> dict:
 
     Args:
         symbol (str): Supported IEX symbol
-        topN (int): Top N insiders to return, defaults to 10.
     Returns:
         dict: Top N insiders ordered least to greatest by volume
     """
@@ -524,14 +523,27 @@ def insider_pie(symbol: str, n: int=3) -> dict:
     if n not in [3, 6, 12]: 
         raise Exception("Param n not [3, 6, 12]")
     raw = insiderTransactions(symbol)
-    out = {"bought": 0, "sold": 0}
+    out = {
+        "symbol": symbol,
+        "data": {
+            "bought": {
+                "transaction": "bought",
+                "shares": 0
+            }, 
+            "sold": {
+                "transaction": "sold",
+                "shares": 0
+            }
+        }
+    } 
     for trx in raw:
         _date = trx["filingDate"]
         if not within_date_range(_date, n): continue
         shares = trx["tranShares"]
         if shares > 0:
-            out["bought"] += shares
+            out["data"]["bought"]["shares"] += shares
         else:
-            out["sold"] -= shares
+            out["data"]["sold"]["shares"] -= shares
+    out["data"] = list(out["data"].values())
     return out
     

@@ -52,5 +52,9 @@ econ_keys = {
 econ_ep = "https://cloud.iexapis.com/stable/time-series/economic/{}?token={}&range={}"
 
 cache_limit = 1048576 * 300 # modify second number for mb limit 
-cache_time_limit = 86400 * (1.5)
+cache_time_limit = 86400 * (1.25)
 
+political_trades = {
+    "senate": "https://senate-stock-watcher-data.s3-us-west-2.amazonaws.com/aggregate/all_transactions.json",
+    "house": "https://house-stock-watcher-data.s3-us-west-2.amazonaws.com/data/all_transactions.json"
+}

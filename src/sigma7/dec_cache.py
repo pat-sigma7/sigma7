@@ -7,6 +7,7 @@ This module contains the code for the sigma7 cache.
 from sigma7.settings import cache_limit, cache_time_limit
 from sigma7 import CACHE
 from sigma7.utils import log, pull_key, stringify_args
+from logging import warning
 import functools
 from copy import deepcopy
 from sys import getsizeof
@@ -51,7 +52,6 @@ def append_cache(platform: str, key: str, func: str, _dict: dict) -> bool:
 
     Returns:
         bool: Whether the operation was successful
-
     """
     _dict["cache_ts"] = time()
     if key in CACHE[platform].keys():    
@@ -85,6 +85,7 @@ def purge_cache(verbose = False) -> bool:
     _cache = deepcopy(CACHE)
     for item in _cache.items():
         platform, _out = item
+        if not isinstance(_out, dict): continue
         if verbose: log(platform)
         for _item in _out.items():
             symbol, __out = _item
@@ -97,6 +98,7 @@ def purge_cache(verbose = False) -> bool:
                 if cache_time_limit <= diff:
                     if verbose: log("removing..")
                     del CACHE[platform][symbol][func]
+                    CACHE["last"] = time()
     return True
 
 def clean_cache(verbose = False) -> bool:
@@ -145,7 +147,7 @@ def cache(platform, _key = None) -> dict:
             out = func(*args, **kwargs)
             if check_cache_size() and key:
                 append_cache(platform, key, _func, out)
-            else: log("Cannot cache {}".format(func.__name__))
+            else: warning("Cannot cache {}".format(func.__name__))
             return out
         return wrapper
     return dec_wrapper
