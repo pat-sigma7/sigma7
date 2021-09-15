@@ -424,31 +424,40 @@ def top_insiders(symbol: str) -> dict:
 
     Args:
         symbol (str): Supported IEX symbol
-        topN (int): Top N insiders to return, defaults to 10.
     Returns:
         dict: Top N insiders ordered least to greatest by volume
     """
     raw = insiderTransactions(symbol)
-    insider = {"sale": 0, "buy": 0, "abs_total": 0}
+    insider = {"sale": 0, "buy": 0, "total_volume": 0}
     insiders = {}
     for trans in raw:
-        name = trans["fullName"]
+        name = trans["fullName"].title()
         title = trans["reportedTitle"]
         shares = trans["tranShares"]
-        if title:
-            name = f"{name} - {title}"
         if name in insiders.keys():
             _insider = insiders[name]
         else:
             _insider = insider.copy()
         if shares > 0:
-            _insider["buy"] = _insider["buy"] + shares
+            _insider["buy"] += shares
         else:
-            _insider["sale"] = _insider["sale"] - shares
-        _insider["abs_total"] = _insider["abs_total"] + abs(shares)
+            _insider["sale"] -= shares
+        if "title" not in _insider.keys():
+            _insider["title"] = title
+        elif "title" in _insider.keys():
+            if not _insider["title"]: _insider["title"] = title
+        _insider["total_volume"] = _insider["total_volume"] + abs(shares)
+        _insider["name"] = name
         insiders[name] = _insider
-        insiders = dict(sorted(insiders.items(), key=lambda x: x[1]["abs_total"], reverse=True))
-    return insiders
+    insiders = dict(sorted(insiders.items(), key=lambda x: x[1]["total_volume"], reverse=True))
+    for x in insiders.copy().items():
+        _key, data = x
+        if not data["title"]: insiders[_key]["title"] = "Employee"
+    out = {
+        "symbol": symbol,
+        "insiders": list(insiders.values())
+    }
+    return out
 
 @cache(platform = "iex")
 def insider_trades(symbol: str) -> dict:
@@ -466,49 +475,18 @@ def insider_trades(symbol: str) -> dict:
     }
     for trx in raw:
         if trx["filingDate"] not in out["transactions"].keys():
-            out["transactions"][trx["filingDate"]] = {"date": False, "bought": 0, "sold": 0}
+            out["transactions"][trx["filingDate"]] = {"date": False, "purchase": 0, "sale": 0}
         _date = trx["filingDate"]
         _out = out["transactions"][_date].copy()
         if not _out["date"]: _out["date"] = _date
         shares = trx["tranShares"]
         if shares > 0:
-            _out["bought"] += shares
+            _out["purchase"] += shares
         else:
-            _out["sold"] -= shares
+            _out["sale"] -= shares
         out["transactions"][_date] = _out 
     out["transactions"] = list(out["transactions"].values())
     return out
-
-@cache(platform = "iex")
-def top_insiders(symbol: str) -> dict:
-    """Returns the top insiders by volume
-
-    Args:
-        symbol (str): Supported IEX symbol
-    Returns:
-        dict: Top N insiders ordered least to greatest by volume
-    """
-    raw = insiderTransactions(symbol)
-    insider = {"sale": 0, "buy": 0, "total_volume": 0}
-    insiders = {}
-    for trans in raw:
-        name = trans["fullName"].title()
-        title = trans["reportedTitle"]
-        shares = trans["tranShares"]
-        if title:
-            name = f"{name} - {title}"
-        if name in insiders.keys():
-            _insider = insiders[name]
-        else:
-            _insider = insider.copy()
-        if shares > 0:
-            _insider["buy"] = _insider["buy"] + shares
-        else:
-            _insider["sale"] = _insider["sale"] - shares
-        _insider["total_volume"] = _insider["total_volume"] + abs(shares)
-        insiders[name] = _insider
-        insiders = dict(sorted(insiders.items(), key=lambda x: x[1]["total_volume"], reverse=True))
-    return insiders
 
 @cache(platform = "iex")
 def insider_pie(symbol: str, n: int=3) -> dict:
@@ -527,11 +505,11 @@ def insider_pie(symbol: str, n: int=3) -> dict:
         "symbol": symbol,
         "data": {
             "bought": {
-                "transaction": "bought",
+                "transaction": "purchase",
                 "shares": 0
             }, 
             "sold": {
-                "transaction": "sold",
+                "transaction": "sale",
                 "shares": 0
             }
         }
@@ -541,9 +519,10 @@ def insider_pie(symbol: str, n: int=3) -> dict:
         if not within_date_range(_date, n): continue
         shares = trx["tranShares"]
         if shares > 0:
-            out["data"]["bought"]["shares"] += shares
+            out["data"]["purchase"]["shares"] += shares
         else:
-            out["data"]["sold"]["shares"] -= shares
+            out["data"]["sale"]["shares"] -= shares
     out["data"] = list(out["data"].values())
     return out
     
+

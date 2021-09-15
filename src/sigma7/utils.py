@@ -9,6 +9,7 @@ from datetime import date, timedelta
 from sigma7.settings import comp_fields
 from pyEX import chartDF
 from numpy import sqrt, log1p
+from statistics import median
 from logging import info
 
 def log(_info: str):
@@ -184,7 +185,10 @@ def recent_price(_date: str, prices: pd.DataFrame) -> str:
 
 def within_date_range(_date: str, lastN: int) -> bool:
     n = lastN * 30
-    _year, _mo, d = _date.split("-")
+    if "/" in _date:
+        _mo, d, _year = _date.split("/")
+    else:
+        _year, _mo, d = _date.split("-")
     start = date.today() - timedelta(n)
     __date = date(int(_year), int(_mo), int(d))
     return __date >= start 
@@ -196,3 +200,24 @@ def stringify_args(params: dict) -> str:
         if type(val) not in [dict, list]:
             out.append(str(val))
     return "_".join(out)
+
+def parse_amount(amt: str) -> int:
+    raw = amt.replace("$", "").replace(",", "") 
+    x, y = raw.split("-")
+    if y == "" or not y:
+        return int(x)
+    out = median([int(x), int(y)])
+    return int(out)
+
+def parse_dates(_date: str) -> str:
+    if "/" in _date:
+        _mo, d, _year = _date.split("/")
+    else:
+        _year, _mo, d = _date.split("-")
+    __date = date(int(_year), int(_mo), int(d))
+    return str(__date)
+
+def unique_list_append(_list: list, item) -> list:
+    out = set(_list)
+    out.add(item)
+    return list(out)
