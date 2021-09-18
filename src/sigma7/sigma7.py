@@ -86,7 +86,7 @@ def political_pie(symbol: str, lastN: int = 6) -> dict:
         }
     } 
     trades = search_political_trades(symbol = symbol, lastN = lastN)["transactions"]
-    trans = {"sale_partial": "sale", "sale_full": "sale", "purchase": "purchase", "exchange": "purchase"}
+    trans = {"sale_partial": "sold", "sale_full": "sold", "purchase": "bought", "exchange": "bought"}
     for trade in trades:
         ra = trade["amount"]
         amt = parse_amount(ra)
@@ -125,6 +125,43 @@ def politician_transactions(symbol: str) -> dict:
     out["transactions"] = list(out["transactions"].values())
     return out
 
+@cache(platform = "sigma7")
+def top_political_traders(symbol: str) -> dict:
+    """Returns the top political traders of a given stock by volume
+        over the last 18 months.
+
+    Args:
+        symbol (str): Supported IEX symbol
+    Returns:
+        dict: Top N political insiders ordered least to greatest by volume
+    """
+    
+    trades = search_political_trades(symbol = symbol, lastN = 18)["transactions"]
+    insider = {"est_sale_volume": 0, "est_purchase_volume": 0, "est_volume": 0, "district": False}
+    trans = {"sale_partial": "est_sale_volume", "sale_full": "est_sale_volume", "purchase": "est_purchase_volume", "exchange": "est_purchase_volume"}
+    insiders = {}
+    for trade in trades:
+        name = trade["representative"]
+        amt = parse_amount(trade["amount"])
+        district = trade["district"]
+        if name in insiders.keys():
+            _insider = insiders[name]
+        else: _insider = insider.copy()
+        _insider["name"] = name
+        _type = trans[trade["type"]]
+        _insider[_type] += amt
+        _insider["est_volume"] += amt
+        if not _insider["district"] and district: 
+            _insider["district"] = district
+            _insider["state"] = district[0:2]
+        insiders[name] = _insider
+    insiders = dict(sorted(insiders.items(), key=lambda x: x[1]["est_volume"], reverse=True))
+    insiders = list(insiders.values())
+    out = {
+        "symbol": symbol,
+        "transactions": insiders
+    }
+    return out
 
 
     

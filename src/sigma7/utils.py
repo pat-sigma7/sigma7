@@ -11,6 +11,7 @@ from pyEX import chartDF
 from numpy import sqrt, log1p
 from statistics import median
 from logging import info
+from sys import getsizeof
 
 def log(_info: str):
     print(_info)
@@ -221,3 +222,21 @@ def unique_list_append(_list: list, item) -> list:
     out = set(_list)
     out.add(item)
     return list(out)
+
+def scan_cache(_cache: dict) -> dict:
+    out = {}
+    _size = 0
+    for items in _cache.items():
+        _key, vals = items
+        _out = {}
+        if _key == "last": continue
+        for _items in vals.items():
+            func, _vals = _items
+            entries = list(_vals.keys())
+            _out[func] = entries
+            for __items in _vals.items():
+                __key, data = __items
+                _size += getsizeof(data)
+        out[_key] = _out
+    out["size"] = _size
+    return out

@@ -112,7 +112,7 @@ Parameters: \n
 '''
 
 insiders_pie_info = ''' Insiders Pie: \n
-\tURL: api/insiders_pie?symbol=[TICKER]
+\tURL: api/insiders_pie?symbol=[TICKER]&period=[INT]
 \n
 Parameters: \n
 \tsymbol: Supported ticker from sigma7. All caps [REQUIRED] \n
@@ -132,5 +132,33 @@ Description: \n
 \tReturns the top insiders ordered by volume.
 '''
 
-political_trades_info = ''' Placeholder
+political_transactions_info = '''Political Trades: \n
+\t URL: api/political_trades?symbol=[TICKER]
+\n
+Parameters: \n
+\tsymbol: Supported ticker from sigma7. All caps [REQUIRED] \n
+\n
+Description: \n
+\tReturns trades made by politicians on a given stock placed by politicians.
+'''
+
+political_pie_info = '''Political Pie: \n
+\t URL: api/political_pie?symbol=[TICKER]&period=[INT]
+\n
+Parameters: \n
+\tsymbol: Supported ticker from sigma7. All caps [REQUIRED] \n
+\tperiod: Period to pull insider data from - [3, 6, 12]
+\n
+Description: \n
+\tReturns the ratio of purchases to sales on trades made by politicians.
+'''
+
+political_insiders_info = '''Top Political Insiders: \n
+\t URL: api/political_pie?symbol=[TICKER]
+\n 
+Parameters: \n
+\tsymbol: Supported ticker from sigma7. All caps [REQUIRED] \n
+\n
+Description: \n
+\tReturns the top political insiders ordered by volume.
 '''

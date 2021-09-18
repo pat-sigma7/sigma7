@@ -519,9 +519,9 @@ def insider_pie(symbol: str, n: int=3) -> dict:
         if not within_date_range(_date, n): continue
         shares = trx["tranShares"]
         if shares > 0:
-            out["data"]["purchase"]["shares"] += shares
+            out["data"]["bought"]["shares"] += shares
         else:
-            out["data"]["sale"]["shares"] -= shares
+            out["data"]["sold"]["shares"] -= shares
     out["data"] = list(out["data"].values())
     return out
     
