@@ -18,7 +18,6 @@
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
 
-[![Issues][issues-shield]][issues-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
 <!-- PROJECT LOGO -->
@@ -31,7 +30,7 @@
 <h3 align="center">sigma7</h3>
 
   <p align="center">
-    project_description
+    Backend library for sigma7's REST API
     <br />
     <a href="https://github.com/pat-sigma7/sigma7"><strong>Explore the docs »</strong></a>
     <br />
@@ -89,7 +88,7 @@ This is an example of how to list things you need to use the software and how to
 
 Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+_For more examples, please refer to the [Documentation](https://github.com/pat-sigma7/sigma7/tree/main/docs)_
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
