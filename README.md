@@ -28,7 +28,7 @@
     <img src="https://i.imgur.com/FPw8rcF.png" alt="Logo" width="50" height="150">
   </a>
 
-<h3 align="center">project_title</h3>
+<h3 align="center">sigma7</h3>
 
   <p align="center">
     project_description
@@ -137,4 +137,4 @@ Project Link: [https://github.com/pat-sigma7/sigma7](https://github.com/pat-sigm
 [license-url]: https://github.com/github_username/repo_name/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/patrick-miramontes-990683100/
-[product-screenshot]: images/screenshot.png
+[product-screenshot]: https://www.sigma7.io/static/media/macImage.a937538c.png
