@@ -4,7 +4,7 @@ decor - module to store most decorator functions for sigma7
 
 import pandas as pd
 import functools
-from sigma7.utils import log
+from .utils import log
 from time import time
 
 def benchmark(func) -> str:

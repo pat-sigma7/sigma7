@@ -1,4 +1,7 @@
 """ Settings module to configure the sigma7 library
+
+This module contains NO functions, but rather variables/objects to be used and imported in other modules.
+
 """
 
 correlates = {

@@ -12,3 +12,4 @@ numpy
 pandasql
 aiohttp
 psutil
+/home/pat/Documents/sigma7-Source/sigma7/dist/sigma7-0.1.0-py3-none-any.whl

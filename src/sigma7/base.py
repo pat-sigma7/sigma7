@@ -6,11 +6,11 @@ in other functions later. They are defined here to later allow for asynchronicit
 """
 
 from json import loads
-from sigma7.settings import econ_keys, econ_ep
-from sigma7.utils import econ_df
+from .settings import econ_keys, econ_ep
+from .utils import econ_df
 from pyEX import chart
 from os import environ
-from sigma7.decor import dec_test
+from .decor import dec_test
 from requests import get
 
 def econ_series(_key: str, range: str = "1y", format: str="dict") -> dict:

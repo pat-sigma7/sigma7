@@ -4,9 +4,9 @@ Cache module for sigma7
 This module contains the code for the sigma7 cache. 
 """
 
-from sigma7.settings import cache_limit, cache_time_limit
+from .settings import cache_limit, cache_time_limit
 from sigma7 import CACHE
-from sigma7.utils import log, pull_key, stringify_args
+from sigma7.utils import log, pull_key, stringify_args, scan_cache
 from logging import warning
 import functools
 from copy import deepcopy
@@ -20,7 +20,7 @@ def check_cache_size() -> bool:
         bool: Whether or not the cache is equal to or past the limit. 
     
     """
-    _size = getsizeof(CACHE)
+    _size = CACHE["size"]
     return _size < cache_limit
 
 def check_cache(platform: str, key: str, func: str):
@@ -108,7 +108,9 @@ def clean_cache(verbose = False) -> bool:
         bool: Whether the operation was successful
     """
     _cache = deepcopy(CACHE)
+    _size = scan_cache(_cache)["size"]
     for item in _cache.items():
+        if item not in ["iex", "sigma7"]: continue
         platform, out = item
         if verbose: log(platform)
         for _item in out.items():
@@ -117,6 +119,7 @@ def clean_cache(verbose = False) -> bool:
             if not _out: 
                 del CACHE[platform][symbol]
                 if verbose: log(f"Cleaning {platform} - {symbol}")
+    CACHE["size"] = _size
     return True
 
 def cache(platform, _key = None) -> dict:

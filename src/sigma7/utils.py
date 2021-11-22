@@ -1,3 +1,9 @@
+""" Utils contains support functions used in other modules. 
+
+These functions are largely used to organize code into smaller more modular chunks. 
+They will be further documented later..
+"""
+
 from datetime import datetime  
 import pandas as pd
 from pandas import Timestamp
@@ -6,12 +12,13 @@ from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 from os import environ
 from datetime import date, timedelta
-from sigma7.settings import comp_fields
+from .settings import comp_fields
 from pyEX import chartDF
 from numpy import sqrt, log1p
 from statistics import median
 from logging import info
 from sys import getsizeof
+from time import mktime
 
 def log(_info: str):
     print(_info)
@@ -229,7 +236,7 @@ def scan_cache(_cache: dict) -> dict:
     for items in _cache.items():
         _key, vals = items
         _out = {}
-        if _key == "last": continue
+        if _key not in ["iex", "sigma7"]: continue
         for _items in vals.items():
             func, _vals = _items
             entries = list(_vals.keys())
@@ -239,4 +246,14 @@ def scan_cache(_cache: dict) -> dict:
                 _size += getsizeof(data)
         out[_key] = _out
     out["size"] = _size
+    return out
+
+def date_to_ts(_date: str) -> int:
+    if "/" in _date:
+        _mo, d, _year = _date.split("/")
+    else:
+        _year, _mo, d = _date.split("-")
+    __date = date(int(_year), int(_mo), int(d))
+    tt = __date.timetuple()
+    out = int(mktime(tt))
     return out

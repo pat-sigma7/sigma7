@@ -1,7 +1,6 @@
 """Wrapper IEX functions used on sigma7 endpoints.
 
-These functions generally consist of further logic and data manipulation being added to
-iex functions.
+These functions generally transform and assist in wrapping over IEX endpoints.
 """
 
 from os import environ
@@ -13,14 +12,14 @@ from sigma7.settings import correlates
 from pyEX.stocks.profiles import peers
 from pyEX.stocks.research import keyStats
 from pyEX.stocks.prices import chart, chartDF, ohlcDF
-from pyEX import dividendsBasicDF, insiderTransactions, ceoCompensation, PyEXception
+from pyEX import dividendsBasicDF, insiderTransactions, ceoCompensation, PyEXception, company
 from scipy.stats import trim_mean
 from math import ceil 
 from statistics import mean
 from scipy.stats import spearmanr
 from pyEX import news
 from time import ctime, time
-from logging import info
+from logging import info, warning
 import pandas as pd
 from numpy import NAN, NaN, prod, cumprod
 from sigma7.settings import correlates, econ_ep, econ_keys, econ_correlates
@@ -146,6 +145,9 @@ def analyzeNews(symbol: str) -> dict:
     
     analyses = client.analyze_sentiment(docs)
     for load, analysis in zip(loads, analyses):
+        if analysis["is_error"]: 
+            warning(analysis)
+            continue
         load["sentiment"] = analysis["sentiment"]
         load["date"] = ctime(load["datetime"]/1000)
         _out = load.copy()
@@ -460,32 +462,50 @@ def top_insiders(symbol: str) -> dict:
     return out
 
 @cache(platform = "iex")
-def insider_trades(symbol: str) -> dict:
+def insider_trades(symbol: str, rollingN: int=4) -> dict:
     """Formats, orders, and computes insider transactions for a given symbol.
 
     Args:
         symbol (str): Supported IEX symbol
+        rollingN (int): Number of transactions to look-back while calculating a rolling mean - defaults to 4
     Returns:
         dict: Dictionary containing insider transaction data
     """
     raw = insiderTransactions(symbol)
+    sale_vol, purch_vol, total_vol = list(), list(), list()
     out = {
         "symbol": symbol,
         "transactions": {}
     }
+    transactions = list()
     for trx in raw:
         if trx["filingDate"] not in out["transactions"].keys():
-            out["transactions"][trx["filingDate"]] = {"date": False, "purchase": 0, "sale": 0}
+            out["transactions"][trx["filingDate"]] = {"date": False, "purchase": 0, "sale": 0, "total": 0}
         _date = trx["filingDate"]
         _out = out["transactions"][_date].copy()
         if not _out["date"]: _out["date"] = _date
-        shares = trx["tranShares"]
+        shares = abs(trx["tranShares"])
         if shares > 0:
             _out["purchase"] += shares
         else:
             _out["sale"] -= shares
+        _out["total"] += shares
         out["transactions"][_date] = _out 
     out["transactions"] = list(out["transactions"].values())
+    for trx in out["transactions"]:
+        purch_vol.append(trx["purchase"])
+        sale_vol.append(trx["sale"])
+        total_vol.append(trx["total"])
+        if len(total_vol) >= 4:
+            trx["rolling_purchase_vol"] = mean(purch_vol[-rollingN:])
+            trx["rolling_sale_vol"] = mean(sale_vol[-rollingN:])
+            trx["rolling_total_vol"] = mean(total_vol[-rollingN:])
+        else:
+            trx["rolling_purchase_vol"] = 0
+            trx["rolling_sale_vol"] = 0
+            trx["rolling_total_vol"] = 0
+        transactions.append(trx)
+    out["transactions"] = transactions[3:]
     return out
 
 @cache(platform = "iex")
@@ -524,5 +544,19 @@ def insider_pie(symbol: str, n: int=3) -> dict:
             out["data"]["sold"]["shares"] -= shares
     out["data"] = list(out["data"].values())
     return out
-    
 
+@cache(platform = "iex")   
+def search_terms(symbol: str) -> dict:
+    data = company(symbol)
+    comp, sec = data["companyName"], data["securityName"]
+    remove_words = [" Company", " company", " LLC", " llc", "corporation", " corp", " Co", " co", ".", ".com", " Inc", "Group"]
+    for _word in remove_words:
+        comp = comp.replace(_word, " ")
+        sec = sec.replace(_word, " ") 
+    out = [
+        symbol,
+        comp,
+        sec,
+        data["CEO"]
+    ]
+    return out

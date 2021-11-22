@@ -4,9 +4,10 @@
 from json import loads
 from requests import get
 from copy import deepcopy
+from statistics import mean
 from sigma7.settings import political_trades
 from sigma7.dec_cache import cache
-from sigma7.utils import parse_dates, within_date_range, parse_amount, unique_list_append
+from sigma7.utils import date_to_ts, parse_dates, within_date_range, parse_amount, unique_list_append
 
 @cache(platform = "sigma7", _key = "misc")
 def pull_political_trades(merge: bool=True, sort: bool=True) -> dict:
@@ -29,9 +30,12 @@ def pull_political_trades(merge: bool=True, sort: bool=True) -> dict:
         if merge:
             out = {"transactions": []}
             for trade in raw:
+                _date = parse_dates(trade["disclosure_date"])
+                trade["date"] = _date
+                trade["timestamp"] = date_to_ts(_date)
                 out["transactions"].append(trade)
             if sort:
-                out["transactions"] = list(sorted(out["transactions"], key=lambda x: x["disclosure_date"], reverse=True))
+                out["transactions"] = list(sorted(out["transactions"], key=lambda x: x["timestamp"], reverse=True))
         else:
             out["transactions"][group] = raw 
     return out
@@ -95,7 +99,7 @@ def political_pie(symbol: str, lastN: int = 6) -> dict:
     return out
 
 @cache(platform = "sigma7")
-def politician_transactions(symbol: str) -> dict:
+def politician_transactions(symbol: str, rollingN: int=4) -> dict:
     """Returns the time-series transactions of trades from politicians on a given symbol
 
     Args:
@@ -108,21 +112,37 @@ def politician_transactions(symbol: str) -> dict:
         "symbol": symbol,
         "transactions": {}
     }
-    tp = {"date": False, "purchase_volume": 0, "sale_volume": 0, "reps": list()}
+    sale_vol, purch_vol, total_vol = list(), list(), list()
+    tp = {"date": False, "purchase_volume": 0, "sale_volume": 0, "total_volume": 0, "reps": list()}
     trans = {"sale_partial": "sale_volume", "sale_full": "sale_volume", "purchase": "purchase_volume", "exchange": "purchase_volume"}
+    trans_loc = {"sale_partial": sale_vol, "sale_full": sale_vol, "purchase": purch_vol, "exchange": purch_vol}
+    _trans_loc = {"sale_partial": purch_vol, "sale_full": purch_vol, "purchase": sale_vol, "exchange": sale_vol}
     trades = search_political_trades(symbol = symbol, lastN = 36)["transactions"]
+    print(len(trades))
     for trade in trades:
         _date = trade["disclosure_date"]
         amt = parse_amount(trade["amount"])
         if _date not in out["transactions"].keys():
             _out = deepcopy(tp)
-        else: _out = trades["transactions"][_date]
+        else: _out = out["transactions"][_date]
         if not _out["date"]: _out["date"] = _date
         _type = trans[trade["type"]]
+        trans_loc[trade["type"]].append(amt)
+        _trans_loc[trade["type"]].append(0)
+        total_vol.append(amt)
         _out[_type] += amt
+        _out["total_volume"] += amt
+        if len(total_vol) >= 4:
+            _out["rolling_purchase_vol"] = mean(purch_vol[-rollingN:])
+            _out["rolling_sale_vol"] = mean(sale_vol[-rollingN:])
+            _out["rolling_total_vol"] = mean(total_vol[-rollingN:])
+        else:
+            _out["rolling_purchase_vol"] = 0
+            _out["rolling_sale_vol"] = 0
+            _out["rolling_total_vol"] = 0
         _out["reps"] = unique_list_append(_out["reps"], trade["representative"])
-        out[_date] = _out
-    out["transactions"] = list(out["transactions"].values())
+        out["transactions"][_date] = _out
+    out["transactions"] = list(out["transactions"].values())[3:]
     return out
 
 @cache(platform = "sigma7")

@@ -1,3 +1,8 @@
+""" sigma7 wrapper - this module contains code to be used as wrappers/decorators throughout the .
+
+The functions contained in this module support the wrapper/decorators in other modules. In particular, decor and dec_cache.
+"""
+
 from pyEX import analystRecommendations, balanceSheet, cashFlow, ceoCompensation, incomeStatement, dividendsBasic, chart, news
 from logging import warning
 import functools
