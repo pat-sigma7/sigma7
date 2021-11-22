@@ -24,7 +24,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/pat-sigma7/sigma7">
-    <img src="https://i.imgur.com/FPw8rcF.png" alt="Logo" width="50" height="150">
+    <img src="https://i.imgur.com/FPw8rcF.png" alt="Logo" width="75" height="150">
   </a>
 
 <h3 align="center">sigma7</h3>
